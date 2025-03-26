@@ -31,6 +31,7 @@ if (openAIConfig is not null)
 
     // Register the plugins
     builder.Plugins.AddFromType<NewsPlugin>();
+    builder.Plugins.AddFromType<SaveToDiskPlugin>();
 
     // Build the kernel
     Kernel kernel = builder.Build();
