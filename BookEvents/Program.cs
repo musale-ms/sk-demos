@@ -26,6 +26,8 @@ if (openAIConfig is not null)
     // Create a kernel with OpenAI chat completion
     var builder = Kernel.CreateBuilder().AddOpenAIChatCompletion(openAIConfig.ModelId, openAIConfig.ApiKey);
 
+    builder.Plugins.AddFromType<EventsPlugin>();
+
     // Add enterprise components
     builder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
 
@@ -54,15 +56,15 @@ if (openAIConfig is not null)
         history.AddUserMessage(userInput);
 
         // How do we want the kernel to execute the plugin functions?
-        // var executionSettings = new OpenAIPromptExecutionSettings()
-        // {
-        //     FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
-        // };
+        var executionSettings = new OpenAIPromptExecutionSettings()
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
 
         // Get the response from the AI
         var result = await chatCompletionService.GetChatMessageContentAsync(
             history,
-            // executionSettings: executionSettings,
+            executionSettings: executionSettings,
             kernel: kernel
         );
 
