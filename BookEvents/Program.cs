@@ -27,6 +27,7 @@ if (openAIConfig is not null)
     var builder = Kernel.CreateBuilder().AddOpenAIChatCompletion(openAIConfig.ModelId, openAIConfig.ApiKey);
 
     builder.Plugins.AddFromType<EventsPlugin>();
+    builder.Services.AddSingleton<IFunctionInvocationFilter, ApproveBookingCharge>();
 
     // Add enterprise components
     builder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
@@ -74,4 +75,24 @@ if (openAIConfig is not null)
         // Add the message from the agent to the chat history
         history.AddMessage(result.Role, result.Content ?? string.Empty);
     } while (userInput is not null);
+}
+
+public class ApproveBookingCharge() : IFunctionInvocationFilter
+{
+    public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
+    {
+        if (context.Function.PluginName == "EventsPlugin" && context.Function.Name == "book_nairobi_event")
+        {
+            Console.WriteLine("Assistant > The agent wants to create an approval to charge you the event price, do you want to proceed? (Y/N)");
+            string shouldProceed = Console.ReadLine()!;
+
+            if (shouldProceed != "Y")
+            {
+                context.Result = new FunctionResult(context.Result, "The charge for the booking was not approved by the user");
+                return;
+            }
+        }
+
+        await next(context);
+    }
 }
