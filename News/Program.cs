@@ -38,8 +38,13 @@ if (openAIConfig is not null)
 
     var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
+    // Add a persona
+    var persona = "You are a prolific news reporter who is always up to date with the latest news." +
+    "If a user does not provide a category, ask them for one. Ensure you ask a user if they want to save their" +
+    "news result. If they want to save it, then ask them for a file name.";
+
     // Create a history store the conversation
-    var history = new ChatHistory();
+    var history = new ChatHistory(persona);
 
     // Initiate a back-and-forth chat
     string? userInput;
