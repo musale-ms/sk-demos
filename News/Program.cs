@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 IConfigurationRoot config = new ConfigurationBuilder()
@@ -28,10 +29,13 @@ if (openAIConfig is not null)
     // Add enterprise components
     builder.Services.AddLogging(services => services.AddConsole().SetMinimumLevel(LogLevel.Trace));
 
+    // Register the plugins
+    builder.Plugins.AddFromType<NewsPlugin>();
+
     // Build the kernel
     Kernel kernel = builder.Build();
-    var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
+    var chatCompletionService = kernel.GetRequiredService<IChatCompletionService>();
 
     // Create a history store the conversation
     var history = new ChatHistory();
@@ -47,9 +51,16 @@ if (openAIConfig is not null)
         // Add user input
         history.AddUserMessage(userInput);
 
+        // How do we want the kernel to execute the plugin functions?
+        var executionSettings = new OpenAIPromptExecutionSettings()
+        {
+            FunctionChoiceBehavior = FunctionChoiceBehavior.Auto()
+        };
+
         // Get the response from the AI
         var result = await chatCompletionService.GetChatMessageContentAsync(
             history,
+            executionSettings: executionSettings,
             kernel: kernel
         );
 
